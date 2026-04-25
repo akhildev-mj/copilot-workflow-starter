@@ -1,6 +1,6 @@
 ---
-name: generate-tests
-description: "Guidelines for generating tests for a given feature"
+name: Copilot Instructions
+description: This file provides instructions for using GitHub Copilot in this project.
 applyTo: "**"
 ---
 
@@ -22,5 +22,5 @@ This project uses an AI-assisted development workflow powered by GitHub Copilot.
 
 ## Workflow
 
-All features are implemented via:
+Features are implemented via:
 Ticket → Plan → Code → Refactor → Test → Review → Commit
