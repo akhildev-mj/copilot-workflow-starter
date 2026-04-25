@@ -1,23 +1,29 @@
 ---
 name: code-review
-description: "Code review is the systematic examination of source code with the intent to find and fix mistakes, improve code quality, and ensure adherence to coding standards."
-argument-hint: "Provide the code or pull request you want to review"
+description: Perform a structured code review of the user’s changes, focusing on correctness, readability, maintainability, and risks, with concise actionable feedback.
+argument-hint: "Provide the code changes or pull request you want to review"
 disable-model-invocation: false
 user-invocable: true
 compatibility: All
+license: MIT
 metadata:
   - type: code-review
 ---
 
-Check:
+# Skill: Code Review
 
-- Readability
-- Maintainability
-- Edge cases
-- Error handling
-- Type safety
+## Overview
 
-Output:
+This skill guides the agent to perform a structured code review.
 
-- Issues
-- Improvements
+## Instructions
+
+- Review only the changed files.
+- Focus on correctness, readability, and maintainability.
+- Point out risks and potential improvements.
+- Keep feedback concise and actionable.
+
+## Expected output
+
+- A short summary.
+- A list of review comments.
