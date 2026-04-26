@@ -1,31 +1,29 @@
 ---
 name: typescript
-description: "Guidelines for TypeScript Development targeting TypeScript 5.x and ES2022 output"
-applyTo: "**/*.ts"
+description: "Use when writing or modifying TypeScript source files (.ts or .tsx). Covers TS 5.x / ES2022 idioms, type-system expectations, async/error handling, security, and testing."
+applyTo: "**/*.{ts,tsx}"
 ---
 
 # TypeScript Development
 
-> These instructions assume projects are built with TypeScript 5.x (or newer) compiling to an ES2022 JavaScript baseline. Adjust guidance if your runtime requires older language targets or down-level transpilation.
+> Targets TypeScript 5.x compiling to ES2022. Adjust if your runtime requires older targets.
 
 ## Core Intent
 
-- Respect the existing architecture and coding standards.
-- Prefer readable, explicit solutions over clever shortcuts.
-- Extend current abstractions before inventing new ones.
-- Prioritize maintainability and clarity, short methods and classes, clean code.
+- Respect existing architecture and conventions; extend before inventing.
+- Prefer readable, explicit solutions. Short functions, clear names.
 
 ## General Guardrails
 
-- Target TypeScript 5.x / ES2022 and prefer native features over polyfills.
-- Use pure ES modules; never emit `require`, `module.exports`, or CommonJS helpers.
+- Prefer native ES2022 features over polyfills.
+- Use ES modules in application source. CommonJS is acceptable only where the tool requires it (e.g., `*.cjs` config files like `.eslintrc.cjs`, `jest.config.cjs`).
 - Rely on the project's build, lint, and test scripts unless asked otherwise.
 - Note design trade-offs when intent is not obvious.
 
 ## Project Organization
 
 - Follow the repository's folder and responsibility layout for new code.
-- Use kebab-case filenames (e.g., `user-session.ts`, `data-service.ts`) unless told otherwise.
+- Use kebab-case for `.ts` filenames (e.g., `user-session.ts`). React components in `.tsx` use PascalCase (e.g., `UserMenu.tsx`).
 - Keep tests, types, and helpers near their implementation when it aids discovery.
 - Reuse or extend shared utilities before adding new ones.
 
@@ -52,10 +50,11 @@ applyTo: "**/*.ts"
 ## Async, Events & Error Handling
 
 - Use `async/await`; wrap awaits in try/catch with structured errors.
+- Handle errors explicitly. ❌ `catch (e) {}` ✅ `catch (e) { logger.error(e); throw; }`
 - Guard edge cases early to avoid deep nesting.
 - Send errors through the project's logging/telemetry utilities.
 - Surface user-facing errors via the repository's notification pattern.
-- Debounce configuration-driven updates and dispose resources deterministically.
+- Dispose resources deterministically (timers, subscriptions, connections).
 
 ## Architecture & Patterns
 
@@ -67,7 +66,6 @@ applyTo: "**/*.ts"
 ## External Integrations
 
 - Instantiate clients outside hot paths and inject them for testability.
-- Never hardcode secrets; load them from secure sources.
 - Apply retries, backoff, and cancellation to network or IO calls.
 - Normalize external responses and map errors to domain shapes.
 
@@ -77,22 +75,16 @@ applyTo: "**/*.ts"
 - Avoid dynamic code execution and untrusted template rendering.
 - Encode untrusted content before rendering HTML; use framework escaping or trusted types.
 - Use parameterized queries or prepared statements to block injection.
-- Keep secrets in secure storage, rotate them regularly, and request least-privilege scopes.
 - Favor immutable flows and defensive copies for sensitive data.
 - Use vetted crypto libraries only.
 - Patch dependencies promptly and monitor advisories.
 
 ## Configuration & Secrets
 
-- Reach configuration through shared helpers and validate with schemas or dedicated validators.
-- Handle secrets via the project's secure storage; guard `undefined` and error states.
+- Reach configuration through shared helpers and validate with schemas.
+- Never hardcode secrets. Load them from the project's secure storage, request least-privilege scopes, and rotate regularly.
+- Guard `undefined` and error states when reading config or secrets.
 - Document new configuration keys and update related tests.
-
-## UI & UX Components
-
-- Sanitize user or external content before rendering.
-- Keep UI layers thin; push heavy logic to services or state managers.
-- Use messaging or events to decouple UI from business logic.
 
 ## Testing Expectations
 

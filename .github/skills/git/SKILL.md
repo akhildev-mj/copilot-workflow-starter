@@ -1,7 +1,7 @@
 ---
 name: git
-description: 'Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions "/commit". Supports: (1) Auto-detecting type and scope from changes, (2) Generating conventional commit messages from diff, (3) Interactive commit with optional type/scope/description overrides, (4) Intelligent file staging for logical grouping'
-argument-hint: "Provide the commit message or type of change you want to commit (e.g., 'feat: add new login endpoint')"
+description: "Use when staging, committing, or writing commit messages. Produces Conventional Commits, splits unrelated changes, and prepares clean history before push or PR. Trigger phrases: commit, commit message, stage, write commit, conventional commit, prepare PR."
+argument-hint: "Optional: scope or summary hint for the commit"
 disable-model-invocation: false
 user-invocable: true
 compatibility: All
@@ -10,120 +10,113 @@ metadata:
   - type: git
 ---
 
-# Git Commit with Conventional Commits
+# Git
 
-## Overview
+## When to Invoke
 
-Create standardized, semantic git commits using the Conventional Commits specification. Analyze the actual diff to determine appropriate type, scope, and message.
+Load this skill when the user wants to:
 
-## Conventional Commit Format
+- Generate a commit message for staged or unstaged changes
+- Split a large working set into focused commits
+- Prepare history for review (squash, reorder, reword)
+- Validate that a message follows Conventional Commits
 
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-## Commit Types
-
-| Type       | Purpose                        |
-| ---------- | ------------------------------ |
-| `feat`     | New feature                    |
-| `fix`      | Bug fix                        |
-| `docs`     | Documentation only             |
-| `style`    | Formatting/style (no logic)    |
-| `refactor` | Code refactor (no feature/fix) |
-| `perf`     | Performance improvement        |
-| `test`     | Add/update tests               |
-| `build`    | Build system/dependencies      |
-| `ci`       | CI/config changes              |
-| `chore`    | Maintenance/misc               |
-| `revert`   | Revert commit                  |
-
-## Breaking Changes
-
-```
-# Exclamation mark after type/scope
-feat!: remove deprecated endpoint
-
-# BREAKING CHANGE footer
-feat: allow config to extend other configs
-
-BREAKING CHANGE: `extends` key behavior changed
-```
+Do NOT load for: pushing, force-pushing, branch deletion, or rewriting published history without explicit user approval.
 
 ## Workflow
 
-### 1. Analyze Diff
+1. **Inspect the working tree** — `git status` and `git diff --staged` (and unstaged if relevant).
+   - Checkpoint: You can list every changed file and its purpose.
+2. **Group changes by intent.** If the diff mixes unrelated concerns (e.g. a bug fix + a refactor), propose splitting into multiple commits.
+   - Exit condition: user declines split → proceed with one commit but flag it in the body.
+3. **Pick the type** from the table below using the dominant change.
+4. **Pick the scope** — a short, lowercase noun for the affected area (`auth`, `api`, `ui`). Omit if truly cross-cutting.
+5. **Write the subject line** in imperative mood, ≤ 72 chars, no trailing period.
+6. **Add a body** when the change isn't self-evident: what changed, _why_, and any caller impact.
+7. **Add footers** for breaking changes (`BREAKING CHANGE: …`) and issue refs (`Refs: #123`, `Closes: #456`).
+8. **Stop before pushing.** Only commit; never push, force-push, or rewrite remote history without explicit confirmation.
 
-```bash
-# If files are staged, use staged diff
-git diff --staged
+### Conventional Commit Types
 
-# If nothing staged, use working tree diff
-git diff
+| Type       | Use for                                                                |
+| ---------- | ---------------------------------------------------------------------- |
+| `feat`     | New user-facing capability                                             |
+| `fix`      | Bug fix                                                                |
+| `refactor` | Restructure without behavior change                                    |
+| `perf`     | Performance improvement                                                |
+| `test`     | Add/adjust tests only                                                  |
+| `docs`     | Documentation only                                                     |
+| `build`    | Build system, dependencies                                             |
+| `ci`       | CI/CD configuration                                                    |
+| `chore`    | Tooling, housekeeping                                                  |
+| `style`    | Formatting only (rare — usually handled by formatter pre-commit hooks) |
 
-# Also check status
-git status --porcelain
+## Examples
+
+### Good
+
+```
+feat(auth): add OAuth2 PKCE flow for SPA login
+
+Replaces the implicit grant with PKCE so the browser client never
+handles a refresh token. Existing sessions remain valid; new logins
+go through /authorize?response_type=code.
+
+Refs: #482
 ```
 
-### 2. Stage Files (if needed)
-
-If nothing is staged or you want to group changes differently:
-
-```bash
-# Stage specific files
-git add path/to/file1 path/to/file2
-
-# Stage by pattern
-git add *.test.*
-git add src/components/*
-
-# Interactive staging
-git add -p
+```
+fix(api): return 404 instead of 500 when invoice id is unknown
 ```
 
-**Never commit secrets** (.env, credentials.json, private keys).
+```
+refactor(checkout): extract price calculation into pricing module
+```
 
-### 3. Generate Commit Message
+### Good — breaking change
 
-Analyze the diff to determine:
+```
+feat(api)!: drop deprecated /v1/users endpoint
 
-- **Type**: What kind of change is this?
-- **Scope**: What area/module is affected?
-- **Description**: One-line summary of what changed (present tense, imperative mood, <72 chars)
+BREAKING CHANGE: clients must migrate to /v2/users. The v1 route
+has returned 410 since 2025-09 and is now removed entirely.
+```
 
-### 4. Execute Commit
+### Bad
 
-```bash
-# Single line
-git commit -m "<type>[scope]: <description>"
+```
+update stuff                  ← no type, no scope, no info
+Fixed the bug.                ← past tense, period, no detail
+feat: did some work on auth and also fixed unrelated css and bumped lodash
+                              ← three commits crammed into one
+```
 
-# Multi-line with body/footer
-git commit -m "$(cat <<'EOF'
-<type>[scope]: <description>
+## Common Pitfalls
+
+- **Past-tense subjects** ("added", "fixed"). Use imperative: "add", "fix".
+- **Mixing concerns** in one commit — reviewers can't bisect or revert cleanly.
+- **Missing `!` or `BREAKING CHANGE` footer** on breaking changes — automated changelogs miss them.
+- **Committing generated files** (lockfiles aside) or secrets — check `git diff --staged` first.
+- **Auto-pushing.** This skill stops at `git commit`. Push is a separate, explicit user action.
+- **`--no-verify`** to skip hooks — never bypass without the user's explicit approval.
+
+## Output Format
+
+Produce two parts: a fenced block containing the commit message (ready to paste), then a short rationale below it.
+
+Use `~~~` for the outer fence so the inner ` ``` ` blocks render correctly:
+
+````markdown
+## Proposed commit
+
+```
+<type>(<scope>): <subject>
 
 <optional body>
 
-<optional footer>
-EOF
-)"
+<optional footers>
 ```
 
-## Best Practices
-
-- One logical change per commit
-- Present tense: "add" not "added"
-- Imperative mood: "fix bug" not "fixes bug"
-- Reference issues: `Closes #123`, `Refs #456`
-- Keep description under 72 characters
-
-## Git Safety Protocol
-
-- NEVER update git config
-- NEVER run destructive commands (--force, hard reset) without explicit request
-- NEVER skip hooks (--no-verify) unless user asks
-- NEVER force push to main/master
-- If commit fails due to hooks, fix and create NEW commit (don't amend)
+**Rationale:** <1–2 sentences on type/scope choice and any splits proposed>
+**Command:** `git commit` (open editor for multi-line) or `git commit -m "..." -m "..."`
+````

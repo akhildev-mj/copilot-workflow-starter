@@ -1,26 +1,24 @@
----
-name: Copilot Instructions
-description: This file provides instructions for using GitHub Copilot in this project.
-applyTo: "**"
----
-
 # Project Overview
 
-This project uses an AI-assisted development workflow powered by GitHub Copilot.
+This project uses an AI-assisted development workflow powered by GitHub Copilot. These instructions apply to every interaction in the workspace.
 
-## Stack (example)
+## Stack
 
-- React / Node / TypeScript
-- Modular architecture
+- TypeScript (5.x, ES2022 target)
+- React 19+ with functional components and hooks
+- Node.js LTS
+- Modular feature-oriented folder layout
 
 ## Rules
 
-- Keep components/services small and modular
-- Separate concerns (UI, logic, data)
-- Prefer readability over cleverness
-- Always handle errors and edge cases
+These are cross-cutting rules. Language- and framework-specific guidance lives in `.github/instructions/*.instructions.md` and loads automatically for matching files.
+
+- Never commit secrets, lockfile-less installs, or generated build output.
+- If acceptance criteria, file paths, or the target of a change are unclear, stop and ask before editing.
 
 ## Workflow
 
 Features are implemented via:
-Ticket → Plan → Code → Refactor → Test → Review → Commit
+**Ticket → Plan → Code → Test → Refactor → Review → Commit**
+
+The end-to-end runbook lives in [agents/implement-from-ticket.agent.md](agents/implement-from-ticket.agent.md).

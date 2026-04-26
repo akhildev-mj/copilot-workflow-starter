@@ -1,134 +1,112 @@
 ---
 name: testing
-description: Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.
-argument-hint: "Provide the URL of the local web application you want to test"
+description: "Reference workflow for writing high-quality automated tests (unit, integration, e2e). Loaded automatically whenever the agent writes or modifies tests — from the /generate-tests prompt, from the implement-from-ticket agent, or ad-hoc. Defines case enumeration, mocking strategy, mutation check, and report format."
+argument-hint: "Provide the function, component, or feature to test"
 disable-model-invocation: false
-user-invocable: true
+user-invocable: false
 compatibility: All
 license: MIT
 metadata:
   - type: testing
 ---
 
-# Web Application Testing
+# Testing
 
-This skill enables comprehensive testing and debugging of local web applications using Playwright automation.
+## When to Invoke
 
-## When to Use This Skill
+Load this skill when the user asks to:
 
-Use this skill when you need to:
+- Write tests for a function, component, module, or feature
+- Increase coverage on existing code
+- Convert manual checks into automated tests
+- Review or fix flaky / poor-quality tests
 
-- Test frontend functionality in a real browser
-- Verify UI behavior and interactions
-- Debug web application issues
-- Capture screenshots for documentation or debugging
-- Inspect browser console logs
-- Validate form submissions and user flows
-- Check responsive design across viewports
+Do NOT load for: running a test suite (just run it), or debugging non-test code.
 
-## Prerequisites
+## Workflow
 
-- Node.js installed on the system
-- A locally running web application (or accessible URL)
-- Playwright will be installed automatically if not present
+1. **Identify the unit under test (UUT)** and its public contract — inputs, outputs, side effects.
+   - Checkpoint: You can describe the contract in one sentence.
+2. **Detect the test framework** in use (Jest, Vitest, Mocha, Playwright). Match its conventions.
+   - Exit condition: no framework configured → ask the user before adding one.
+3. **Enumerate test cases** before writing code:
+   - Happy path
+   - Each branch / discriminant
+   - Boundary values (0, 1, max, empty, null/undefined)
+   - Error paths (rejected promises, thrown errors)
+   - Async race conditions and cancellation, where applicable
+4. **Write tests** following Arrange-Act-Assert. One behavior per test.
+5. **Mock at boundaries only** — network, filesystem, time. Do NOT mock the UUT itself.
+6. **Run the suite** and confirm all new tests pass.
+   - Checkpoint: all green; coverage on changed lines reported if available.
+7. **Mutation-check the assertions**: temporarily break the UUT — every test must catch a meaningful mutation. Revert.
 
-## Core Capabilities
+## Examples
 
-### 1. Browser Automation
+### Good — behavior-focused, one assertion concern
 
-- Navigate to URLs
-- Click buttons and links
-- Fill form fields
-- Select dropdowns
-- Handle dialogs and alerts
+```ts
+describe("parseDuration", () => {
+  it('parses "1h30m" as 90 minutes', () => {
+    expect(parseDuration("1h30m")).toBe(90);
+  });
 
-### 2. Verification
-
-- Assert element presence
-- Verify text content
-- Check element visibility
-- Validate URLs
-- Test responsive behavior
-
-### 3. Debugging
-
-- Capture screenshots
-- View console logs
-- Inspect network requests
-- Debug failed tests
-
-## Usage Examples
-
-### Example 1: Basic Navigation Test
-
-```javascript
-// Navigate to a page and verify title
-await page.goto("http://localhost:3000");
-const title = await page.title();
-console.log("Page title:", title);
+  it("throws on negative durations", () => {
+    expect(() => parseDuration("-5m")).toThrow(RangeError);
+  });
+});
 ```
 
-### Example 2: Form Interaction
+### Bad — tests implementation, not behavior
 
-```javascript
-// Fill out and submit a form
-await page.fill("#username", "testuser");
-await page.fill("#password", "password123");
-await page.click('button[type="submit"]');
-await page.waitForURL("**/dashboard");
+```ts
+it("calls _normalizeInput then _toMinutes", () => {
+  const spy1 = jest.spyOn(parser, "_normalizeInput");
+  const spy2 = jest.spyOn(parser, "_toMinutes");
+  parseDuration("1h");
+  expect(spy1).toHaveBeenCalled(); // brittle — refactor breaks the test
+  expect(spy2).toHaveBeenCalled();
+});
 ```
 
-### Example 3: Screenshot Capture
+### Bad — assertion that always passes
 
-```javascript
-// Capture a screenshot for debugging
-await page.screenshot({ path: "debug.png", fullPage: true });
+```ts
+it("returns a value", () => {
+  expect(parseDuration("1h")).toBeDefined(); // useless
+});
 ```
 
-## Guidelines
+## Common Pitfalls
 
-1. **Always verify the app is running** - Check that the local server is accessible before running tests
-2. **Use explicit waits** - Wait for elements or navigation to complete before interacting
-3. **Capture screenshots on failure** - Take screenshots to help debug issues
-4. **Clean up resources** - Always close the browser when done
-5. **Handle timeouts gracefully** - Set reasonable timeouts for slow operations
-6. **Test incrementally** - Start with simple interactions before complex flows
-7. **Use selectors wisely** - Prefer data-testid or role-based selectors over CSS classes
+- **Mocking the UUT** — you end up testing the mock, not the code.
+- **Snapshot-only tests** for logic — they document output but don't enforce intent.
+- **Sleeping for time** — use fake timers (`jest.useFakeTimers()`) or injected clocks.
+- **One giant test** with many `expect`s — failure messages become useless.
+- **No negative cases** — coverage of failure modes is where bugs hide.
+- **Test order coupling** — each test must run independently. Reset state in `afterEach`.
 
-## Common Patterns
+## Output Format
 
-### Pattern: Wait for Element
+```markdown
+# Tests for <UUT>
 
-```javascript
-await page.waitForSelector("#element-id", { state: "visible" });
+## Cases Covered
+
+- [x] <case 1>
+- [x] <case 2>
+- [ ] <case skipped — reason>
+
+## Files
+
+- `<path/to/file.test.ts>` — <n> tests
+
+## Run
+
+`<command>` → <pass>/<total> passing
+
+## Notes
+
+- Mocked: <list of boundaries>
+- Coverage delta on changed lines: <if available>
 ```
-
-### Pattern: Check if Element Exists
-
-```javascript
-const exists = (await page.locator("#element-id").count()) > 0;
-```
-
-### Pattern: Get Console Logs
-
-```javascript
-page.on("console", (msg) => console.log("Browser log:", msg.text()));
-```
-
-### Pattern: Handle Errors
-
-```javascript
-try {
-  await page.click("#button");
-} catch (error) {
-  await page.screenshot({ path: "error.png" });
-  throw error;
-}
-```
-
-## Limitations
-
-- Requires Node.js environment
-- Cannot test native mobile apps (use React Native Testing Library instead)
-- May have issues with complex authentication flows
-- Some modern frameworks may require specific configuration

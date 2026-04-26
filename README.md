@@ -1,134 +1,111 @@
 # 🚀 Copilot Workflow Starter
 
-A **production-ready GitHub Copilot setup** designed to enable **ticket-driven, end-to-end AI-assisted development workflows**.
+**A drop-in `.github/` configuration that turns GitHub Copilot into a structured, ticket-driven dev assistant for TypeScript / React.**
 
-This repository provides a structured system using:
+![VS Code](https://img.shields.io/badge/VS%20Code-1.95%2B-007ACC?logo=visualstudiocode&logoColor=white)
+![Copilot](https://img.shields.io/badge/GitHub%20Copilot-required-24292e?logo=github)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19%2B-61DAFB?logo=react&logoColor=black)
+![Config Only](https://img.shields.io/badge/ships-config%20only-brightgreen)
 
-- **Instructions** → project rules & standards
-- **Prompts** → reusable task templates
-- **Skills** → intelligent capabilities (review, refactor, testing, git)
-- **Agents** → full workflow automation
+> [!NOTE]
+> This repo ships **only Copilot customization files** — no application source. Drop the `.github/` folder into your project to adopt the workflow.
 
 ---
 
-## 🧠 Why This Exists
+## 🧩 The Four Layers
 
-Modern Copilot usage goes beyond autocomplete.
+| Layer | Path | Trigger | Role |
+| :--- | :--- | :--- | :--- |
+| 📜 **Instructions** | `.github/instructions/*.instructions.md` | Auto (by file glob or always-on) | House rules / style |
+| 🛠️ **Skills** | `.github/skills/<name>/SKILL.md` | Auto-matched on description, or via prompt/agent | Reusable expertise |
+| ⚡ **Prompts** | `.github/prompts/*.prompt.md` | User types `/command` | One-shot tasks |
+| 🤖 **Agents** | `.github/agents/*.agent.md` | Picked from agent menu (`@name`) | Multi-step orchestration |
 
-This setup turns Copilot into a:
+### How they call each other
 
-- 👨‍💻 Developer
-- 🧪 Tester
-- 🔍 Reviewer
-- 🔧 Refactorer
-- 🧾 Git assistant
+| Caller ↓ / Callee → | 🤖 Agent | ⚡ Prompt | 🛠️ Skill | 📜 Instructions |
+| :--- | :-: | :-: | :-: | :-: |
+| 🤖 **Agent** | — | ✅ | ✅ | ✅ (via skill) |
+| ⚡ **Prompt** | ❌ | — | ✅ | ✅ (via skill) |
+| 🛠️ **Skill** | ❌ | ❌ | — | ✅ |
+| 📜 **Instructions** | ❌ | ❌ | ❌ | — |
 
-All driven by a **single command + ticket input**.
+> Dependency flows **top → bottom only**. A skill never calls a prompt; a prompt never calls an agent. Each piece stays replaceable.
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 .github/
-  copilot-instructions.md
-
-  instructions/
-    react.instructions.md
-    typescript.instructions.md
-
-  prompts/
-    implement-feature.prompt.md
-    generate-tests.prompt.md
-
-  skills/
-    code-review/
-    refactor/
-    git/
-    testing/
-
-  agents/
-    implement-from-ticket.agent.md
+├── copilot-instructions.md             # Always-on project rules
+├── instructions/
+│   ├── typescript.instructions.md      # applyTo: **/*.ts
+│   └── react.instructions.md           # applyTo: **/*.tsx
+├── prompts/
+│   ├── implement-feature.prompt.md     # /implement-feature
+│   └── generate-tests.prompt.md        # /generate-tests
+├── skills/
+│   ├── code-review/SKILL.md
+│   ├── refactor/SKILL.md
+│   ├── testing/SKILL.md
+│   └── git/SKILL.md
+└── agents/
+    └── implement-from-ticket.agent.md  # End-to-end delivery agent
 ```
 
 ---
 
-## 🔷 Core Concepts
+## ⚡ Quick Start
 
-### 1. Instructions (Global + Tech Rules)
-
-- `.github/copilot-instructions.md`
-- `.github/instructions/*.instructions.md`
-
-Define:
-
-- Project architecture
-- Coding standards
-- Tech-specific best practices
-
-👉 Always applied automatically
+| # | Step | Action |
+| :-: | :--- | :--- |
+| 1 | **Copy** | Drop `.github/` into your repo root |
+| 2 | **Configure** | Edit `.github/copilot-instructions.md` for your stack |
+| 3 | **Open** | Launch in VS Code with Copilot Chat installed |
+| 4 | **Use** | Instructions auto-load; skills/agents discoverable in chat |
 
 ---
 
-### 2. Prompts (Reusable Tasks)
+## 🎯 Invocation Cheat Sheet
 
-- `.github/prompts/*.prompt.md`
+| Want to… | Use | How to trigger | Example |
+| :--- | :--- | :--- | :--- |
+| Run a one-shot task | ⚡ **Prompt** | Type `/` in Copilot Chat | `/implement-feature Add a CSV export button to the invoices page` |
+| Generate tests for a file | ⚡ **Prompt** | Type `/` | `/generate-tests src/utils/parse-duration.ts` |
+| Deliver a ticket end-to-end | 🤖 **Agent** | Pick from agent picker or `@` | `@Implement From Ticket` then paste `PROD-123 — Customers should be able to reset their password…` |
+| Review / refactor / commit | 🛠️ **Skill** (auto) | Phrase the request | *"review my changes"* → `code-review` loads itself. Or call `/code-review`, `/refactor` directly |
 
-Examples:
+### Implement From Ticket — the runbook
 
-- Feature implementation
-- Test generation
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| 📥 **parse** | 🗺️ **plan** | 🔨 **implement** | 🧪 **test** | ♻️ **refactor** | 🔍 **self-review** | ✅ **verify** | 📝 **commit** |
 
-👉 Triggered manually in Copilot Chat
-
----
-
-### 3. Skills (Capabilities)
-
-- `.github/skills/*/SKILL.md`
-
-Examples:
-
-- Code review
-- Refactoring
-- Testing
-- Git commits
-
-👉 Automatically used when relevant
-
----
-
-### 4. Agents (Automation)
-
-- `.github/agents/*.agent.md`
-
-Example:
-
-- `implement-from-ticket.agent.md`
-
-👉 Executes full development lifecycle:
-
-- Plan → Code → Refactor → Test → Review → Commit
-
----
-
-## ⚡ Workflow Example
-
-```bash
-/implement-from-ticket PROD-123
+```text
+parse → plan → implement → test → refactor → self-review → verify → commit
 ```
 
-### What happens internally:
+> [!IMPORTANT]
+> The agent stops at `git commit` — it does **not** push.
 
-1. Load instructions (project + tech rules)
-2. Parse ticket (via MCP or manual input)
-3. Generate feature using prompts
-4. Apply skills:
-   - Refactor
-   - Testing
-   - Code review
-   - Git
-
-5. Agent orchestrates entire process
+**💡 Tip:** Skills are matched against their `description` field. You don't have to remember slash commands — just describe the task.
 
 ---
+
+## ✅ Requirements
+
+| Requirement | Version |
+| :--- | :--- |
+| VS Code | `1.95+` |
+| GitHub Copilot + Copilot Chat | signed in |
+| Workspace root | must contain `.github/` |
+
+---
+
+## 👋 About Me
+
+Built and maintained by **Akhildev MJ**
+
+[![Portfolio](https://img.shields.io/badge/Portfolio-akhildev.vercel.app-000?style=for-the-badge&logo=vercel)](https://akhildev.vercel.app)
