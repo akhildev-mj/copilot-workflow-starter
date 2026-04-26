@@ -15,6 +15,9 @@ These are cross-cutting rules. Language- and framework-specific guidance lives i
 
 - Never commit secrets, lockfile-less installs, or generated build output.
 - If acceptance criteria, file paths, or the target of a change are unclear, stop and ask before editing.
+- Hooks live in `.github/hooks/*.json`; hook scripts live in `.github/hooks/scripts/`.
+- Prefer deterministic hooks for enforceable policy and automation (`PreToolUse`, `PostToolUse`) instead of relying only on natural-language instructions.
+- Keep hook commands safe and auditable: avoid hardcoded credentials, set explicit timeouts, and validate tool input in scripts.
 
 ## Workflow
 
