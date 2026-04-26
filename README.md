@@ -42,60 +42,58 @@ Hooks are event-driven shell commands. They don't participate in the call graph 
 
 ```text
 .github/
-├── copilot-instructions.md             # Always-on project rules
+├── copilot-instructions.md             # Always-on project rules (fill in your stack)
 ├── hooks/
-│   ├── formatting.json                 # PostToolUse formatter hook
-│   ├── security.json                   # PreToolUse security policy hook
+│   ├── security.json                   # PreToolUse — blocks dangerous commands
+│   ├── template.hook.json              # Starter template for new hooks
 │   └── scripts/
-│       ├── format-changed-files.sh
-│       └── block-dangerous.sh
+│       ├── block-dangerous.sh          # Enforces security policy
+│       └── template-hook.sh            # Starter template for new hook scripts
 ├── instructions/
-│   ├── typescript.instructions.md      # applyTo: **/*.ts
-│   └── react.instructions.md           # applyTo: **/*.tsx
+│   ├── typescript.instructions.md      # applyTo: **/*.{ts,tsx}
+│   └── template.instructions.md        # Starter template for new instruction files
 ├── prompts/
 │   ├── implement-feature.prompt.md     # /implement-feature
-│   └── generate-tests.prompt.md        # /generate-tests
+│   └── template.prompt.md              # Starter template for new prompts
 ├── skills/
-│   ├── code-review/SKILL.md
-│   ├── refactor/SKILL.md
-│   ├── testing/SKILL.md
-│   └── git/SKILL.md
+│   ├── code-review/SKILL.md            # Auto-matched on review/PR phrases
+│   └── template-skill/SKILL.md         # Starter template for new skills
 └── agents/
-    └── implement-from-ticket.agent.md  # End-to-end delivery agent
+    ├── implement-from-ticket.agent.md  # End-to-end delivery agent
+    └── template.agent.md               # Starter template for new agents
 ```
 
 ---
 
 ## ⚡ Quick Start
 
-|  #  | Step             | Action                                                                                    |
-| :-: | :--------------- | :---------------------------------------------------------------------------------------- |
-|  1  | **Copy**         | Drop `.github/` into your repo root                                                       |
-|  2  | **Configure**    | Edit `.github/copilot-instructions.md` for your stack                                     |
-|  3  | **Enable hooks** | Ensure hook files are under `.github/hooks/` and scripts are executable                   |
-|  4  | **Open**         | Launch in VS Code with Copilot Chat installed                                             |
-|  5  | **Use**          | Instructions auto-load; skills/agents discoverable in chat; hooks run on lifecycle events |
+|  #  | Step             | Action                                                                                     |
+| :-: | :--------------- | :----------------------------------------------------------------------------------------- |
+|  1  | **Copy**         | Drop `.github/` into your repo root                                                        |
+|  2  | **Configure**    | Edit `.github/copilot-instructions.md` — fill in your project name, stack, and guardrails  |
+|  3  | **Enable hooks** | Make scripts executable: `chmod +x .github/hooks/scripts/*.sh`                             |
+|  4  | **Open**         | Launch in VS Code with Copilot Chat installed                                              |
+|  5  | **Use**          | Instructions auto-load; skills/agents discoverable in chat; hooks fire on lifecycle events |
 
 ---
 
 ## 🎯 Invocation Cheat Sheet
 
-| Want to…                       | Use                 | How to trigger                  | Example                                                                                            |
-| :----------------------------- | :------------------ | :------------------------------ | :------------------------------------------------------------------------------------------------- |
-| Run a one-shot task            | ⚡ **Prompt**       | Type `/` in Copilot Chat        | `/implement-feature Add a CSV export button to the invoices page`                                  |
-| Generate tests for a file      | ⚡ **Prompt**       | Type `/`                        | `/generate-tests src/utils/parse-duration.ts`                                                      |
-| Deliver a ticket end-to-end    | 🤖 **Agent**        | Pick from agent picker or `@`   | `@Implement From Ticket` then paste `PROD-123 — Customers should be able to reset their password…` |
-| Review / refactor / commit     | 🛠️ **Skill** (auto) | Phrase the request              | _"review my changes"_ → `code-review` loads itself. Or call `/code-review`, `/refactor` directly   |
-| Enforce security / auto-format | 🪝 **Hook**         | Add `.json` in `.github/hooks/` | `security.json` denies dangerous terminal commands before execution                                |
+| Want to…                    | Use                 | How to trigger                | Example                                                                                            |
+| :-------------------------- | :------------------ | :---------------------------- | :------------------------------------------------------------------------------------------------- |
+| Implement a scoped feature  | ⚡ **Prompt**       | Type `/` in Copilot Chat      | `/implement-feature Add a CSV export button to the invoices page`                                  |
+| Deliver a ticket end-to-end | 🤖 **Agent**        | Pick from agent picker or `@` | `@implement-from-ticket` then paste `PROD-123 — Customers should be able to reset their password…` |
+| Review a file or diff       | 🛠️ **Skill** (auto) | Phrase the request            | _"review my changes"_ → `code-review` skill loads itself automatically                             |
+| Block dangerous commands    | 🪝 **Hook**         | Automatic on every tool call  | `security.json` denies destructive terminal commands before execution                              |
 
 ### Implement From Ticket — the runbook
 
-|      1       |      2      |        3         |      4      |        5        |         6          |       7       |       8       |
-| :----------: | :---------: | :--------------: | :---------: | :-------------: | :----------------: | :-----------: | :-----------: |
-| 📥 **parse** | 🗺️ **plan** | 🔨 **implement** | 🧪 **test** | ♻️ **refactor** | 🔍 **self-review** | ✅ **verify** | 📝 **commit** |
+|      1       |     2      |      3      |        4         |      5      |       6       |       7        |       8       |
+| :----------: | :--------: | :---------: | :--------------: | :---------: | :-----------: | :------------: | :-----------: |
+| 📥 **parse** | 🗺️ **map** | 🛠️ **plan** | 🔨 **implement** | 🧪 **test** | ✅ **verify** | 📋 **summary** | 🔒 **review** |
 
 ```text
-parse → plan → implement → test → refactor → self-review → verify → commit
+parse → map → plan → implement → test → verify → summary → review
 ```
 
 > [!IMPORTANT]

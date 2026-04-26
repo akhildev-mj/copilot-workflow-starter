@@ -1,107 +1,46 @@
 ---
 name: typescript
-description: "Use when writing or modifying TypeScript source files (.ts or .tsx). Covers TS 5.x / ES2022 idioms, type-system expectations, async/error handling, security, and testing."
+description: "Use when writing or modifying TypeScript source files (.ts, .tsx). Covers types, async error handling, and test expectations. Trigger phrases: TypeScript, TS file, add type, async function."
 applyTo: "**/*.{ts,tsx}"
 ---
 
-# TypeScript Development
+# TypeScript Instructions
 
-> Targets TypeScript 5.x compiling to ES2022. Adjust if your runtime requires older targets.
+## 1: Prefer Explicit Types
 
-## Core Intent
+- Avoid `any` — implicit or explicit.
+- Use `unknown` with a type guard when the shape is truly uncertain.
+- Use TypeScript utility types (`Partial`, `Readonly`, `Record`) to express intent.
 
-- Respect existing architecture and conventions; extend before inventing.
-- Prefer readable, explicit solutions. Short functions, clear names.
+## 2: Keep Functions Focused
 
-## General Guardrails
+Each function should have one clear concern; extract helpers when logic branches grow.
 
-- Prefer native ES2022 features over polyfills.
-- Use ES modules in application source. CommonJS is acceptable only where the tool requires it (e.g., `*.cjs` config files like `.eslintrc.cjs`, `jest.config.cjs`).
-- Rely on the project's build, lint, and test scripts unless asked otherwise.
-- Note design trade-offs when intent is not obvious.
+## 3: Handle Async Errors Explicitly
 
-## Project Organization
+Wrap `await` in `try/catch` and handle or rethrow — no empty catch blocks.
 
-- Follow the repository's folder and responsibility layout for new code.
-- Use kebab-case for `.ts` filenames (e.g., `user-session.ts`). React components in `.tsx` use PascalCase (e.g., `UserMenu.tsx`).
-- Keep tests, types, and helpers near their implementation when it aids discovery.
-- Reuse or extend shared utilities before adding new ones.
+### Example
 
-## Naming & Style
+```ts
+// before — swallows the error
+async function load(id: string): Promise<any> {
+  try {
+    return await fetch(id);
+  } catch {}
+}
 
-- Use PascalCase for classes, interfaces, enums, and type aliases; camelCase for everything else.
-- Skip interface prefixes like `I`; rely on descriptive names.
-- Name things for their behavior or domain meaning, not implementation.
+// after — explicit type, explicit error
+async function load(id: string): Promise<Response> {
+  try {
+    return await fetch(id);
+  } catch (err) {
+    logger.error(err);
+    throw err;
+  }
+}
+```
 
-## Formatting & Style
+## 4: Test Behavior Changes
 
-- Run the repository's lint/format scripts (e.g., `npm run lint`) before submitting.
-- Match the project's indentation, quote style, and trailing comma rules.
-- Keep functions focused; extract helpers when logic branches grow.
-- Favor immutable data and pure functions when practical.
-
-## Type System Expectations
-
-- Avoid `any` (implicit or explicit); prefer `unknown` plus narrowing.
-- Use discriminated unions for realtime events and state machines.
-- Centralize shared contracts instead of duplicating shapes.
-- Express intent with TypeScript utility types (e.g., `Readonly`, `Partial`, `Record`).
-
-## Async, Events & Error Handling
-
-- Use `async/await`; wrap awaits in try/catch with structured errors.
-- Handle errors explicitly. ❌ `catch (e) {}` ✅ `catch (e) { logger.error(e); throw; }`
-- Guard edge cases early to avoid deep nesting.
-- Send errors through the project's logging/telemetry utilities.
-- Surface user-facing errors via the repository's notification pattern.
-- Dispose resources deterministically (timers, subscriptions, connections).
-
-## Architecture & Patterns
-
-- Follow the repository's dependency injection or composition pattern; keep modules single-purpose.
-- Observe existing initialization and disposal sequences when wiring into lifecycles.
-- Keep transport, domain, and presentation layers decoupled with clear interfaces.
-- Supply lifecycle hooks (e.g., `initialize`, `dispose`) and targeted tests when adding services.
-
-## External Integrations
-
-- Instantiate clients outside hot paths and inject them for testability.
-- Apply retries, backoff, and cancellation to network or IO calls.
-- Normalize external responses and map errors to domain shapes.
-
-## Security Practices
-
-- Validate and sanitize external input with schema validators or type guards.
-- Avoid dynamic code execution and untrusted template rendering.
-- Encode untrusted content before rendering HTML; use framework escaping or trusted types.
-- Use parameterized queries or prepared statements to block injection.
-- Favor immutable flows and defensive copies for sensitive data.
-- Use vetted crypto libraries only.
-- Patch dependencies promptly and monitor advisories.
-
-## Configuration & Secrets
-
-- Reach configuration through shared helpers and validate with schemas.
-- Never hardcode secrets. Load them from the project's secure storage, request least-privilege scopes, and rotate regularly.
-- Guard `undefined` and error states when reading config or secrets.
-- Document new configuration keys and update related tests.
-
-## Testing Expectations
-
-- Add or update unit tests with the project's framework and naming style.
-- Expand integration or end-to-end suites when behavior crosses modules or platform APIs.
-- Run targeted test scripts for quick feedback before submitting.
-- Avoid brittle timing assertions; prefer fake timers or injected clocks.
-
-## Performance & Reliability
-
-- Lazy-load heavy dependencies and dispose them when done.
-- Defer expensive work until users need it.
-- Batch or debounce high-frequency events to reduce thrash.
-- Track resource lifetimes to prevent leaks.
-
-## Documentation & Comments
-
-- Add JSDoc to public APIs; include `@remarks` or `@example` when helpful.
-- Write comments that capture intent, and remove stale notes during refactors.
-- Update architecture or design docs when introducing significant patterns.
+Add or update tests whenever observable behavior changes.

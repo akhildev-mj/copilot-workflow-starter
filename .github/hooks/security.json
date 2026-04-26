@@ -2,9 +2,11 @@
   "hooks": {
     "PreToolUse": [
       {
+        "name": "Block Dangerous Commands",
+        "description": "Block dangerous commands that could compromise security.",
         "type": "command",
         "command": "./.github/hooks/scripts/block-dangerous.sh",
-        "timeout": 5
+        "timeout": 60
       }
     ]
   }

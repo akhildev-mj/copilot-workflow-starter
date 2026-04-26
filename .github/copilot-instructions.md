@@ -1,27 +1,49 @@
-# Project Overview
+# [Project Name]
 
-This project uses an AI-assisted development workflow powered by GitHub Copilot. These instructions apply to every interaction in the workspace.
+[One sentence describing what this project does.]
 
-## Stack
+## Tech Stack
 
-- TypeScript (5.x, ES2022 target)
-- React 19+ with functional components and hooks
-- Node.js LTS
-- Modular feature-oriented folder layout
+| Layer     | Technology        | Version    |
+| --------- | ----------------- | ---------- |
+| Language  | [e.g. TypeScript] | [e.g. 5.x] |
+| Framework | [e.g. React]      | [e.g. 19+] |
+| Runtime   | [e.g. Node.js]    | [e.g. LTS] |
 
-## Rules
+## Copilot Setup
 
-These are cross-cutting rules. Language- and framework-specific guidance lives in `.github/instructions/*.instructions.md` and loads automatically for matching files.
+All Copilot customizations live under `.github/`:
 
-- Never commit secrets, lockfile-less installs, or generated build output.
-- If acceptance criteria, file paths, or the target of a change are unclear, stop and ask before editing.
-- Hooks live in `.github/hooks/*.json`; hook scripts live in `.github/hooks/scripts/`.
-- Prefer deterministic hooks for enforceable policy and automation (`PreToolUse`, `PostToolUse`) instead of relying only on natural-language instructions.
-- Keep hook commands safe and auditable: avoid hardcoded credentials, set explicit timeouts, and validate tool input in scripts.
+```text
+.github/
+├── copilot-instructions.md             # Always-on project rules
+├── instructions/*.instructions.md      # Rules per file type
+├── prompts/*.prompt.md                 # One-shot tasks via /name
+├── skills/<name>/SKILL.md              # Reusable workflows
+├── agents/*.agent.md                   # End-to-end task agents
+└── hooks/*.json + scripts/             # Shell commands at lifecycle events
+```
 
-## Workflow
+## Project Setup
 
-Features are implemented via:
-**Ticket → Plan → Code → Test → Refactor → Review → Commit**
+```text
+src/
+├── index.ts
+└── utils.ts
+```
 
-The end-to-end runbook lives in [agents/implement-from-ticket.agent.md](agents/implement-from-ticket.agent.md).
+## Build and Test
+
+```bash
+[install]   # e.g. npm install
+[build]     # e.g. npm run build
+[test]      # e.g. npm test
+[lint]      # e.g. npm run lint
+```
+
+## Guardrails
+
+- Do not commit secrets or credentials.
+- Do not run destructive commands unless explicitly requested.
+- Ask when acceptance criteria or target files are unclear.
+- Keep every change inside the requested scope.

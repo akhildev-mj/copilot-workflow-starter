@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "<HookEvent>": [
+      {
+        "name": "Name of the Hook",
+        "description": "Description of what the hook does.",
+        "type": "command",
+        "command": "./.github/hooks/scripts/<script-name>.sh",
+        "timeout": 60
+      }
+    ]
+  }
+}
